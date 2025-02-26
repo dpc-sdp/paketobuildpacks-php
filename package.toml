@@ -3,10 +3,10 @@
   uri = "build/buildpack.tgz"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/httpd@0.7.44"
+  uri = "urn:cnb:registry:paketo-buildpacks/httpd@0.7.45"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/nginx@0.17.20"
+  uri = "urn:cnb:registry:paketo-buildpacks/nginx@0.17.21"
 
 [[dependencies]]
   uri = "urn:cnb:registry:paketo-buildpacks/composer@0.7.16"
