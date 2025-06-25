@@ -22,7 +22,7 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/watchexec"
     optional = true
-    version = "3.5.2"
+    version = "3.5.3"
 
   [[order.group]]
     id = "paketo-buildpacks/php-dist"
@@ -40,7 +40,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/httpd"
-    version = "0.7.54"
+    version = "0.7.56"
 
   [[order.group]]
     id = "paketo-buildpacks/php-fpm"
@@ -67,17 +67,17 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/procfile"
     optional = true
-    version = "5.11.1"
+    version = "5.11.2"
 
   [[order.group]]
     id = "paketo-buildpacks/environment-variables"
     optional = true
-    version = "4.9.1"
+    version = "4.9.2"
 
   [[order.group]]
     id = "paketo-buildpacks/image-labels"
     optional = true
-    version = "4.10.0"
+    version = "4.10.1"
 
 [[order]]
 
@@ -89,7 +89,7 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/watchexec"
     optional = true
-    version = "3.5.2"
+    version = "3.5.3"
 
   [[order.group]]
     id = "paketo-buildpacks/php-dist"
@@ -107,7 +107,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/nginx"
-    version = "0.17.31"
+    version = "0.17.32"
 
   [[order.group]]
     id = "paketo-buildpacks/php-fpm"
@@ -134,17 +134,17 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/procfile"
     optional = true
-    version = "5.11.1"
+    version = "5.11.2"
 
   [[order.group]]
     id = "paketo-buildpacks/environment-variables"
     optional = true
-    version = "4.9.1"
+    version = "4.9.2"
 
   [[order.group]]
     id = "paketo-buildpacks/image-labels"
     optional = true
-    version = "4.10.0"
+    version = "4.10.1"
 
 [[order]]
 
@@ -179,14 +179,14 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/procfile"
     optional = true
-    version = "5.11.1"
+    version = "5.11.2"
 
   [[order.group]]
     id = "paketo-buildpacks/environment-variables"
     optional = true
-    version = "4.9.1"
+    version = "4.9.2"
 
   [[order.group]]
     id = "paketo-buildpacks/image-labels"
     optional = true
-    version = "4.10.0"
+    version = "4.10.1"
