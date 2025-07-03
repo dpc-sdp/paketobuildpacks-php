@@ -40,7 +40,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/httpd"
-    version = "0.7.56"
+    version = "0.7.57"
 
   [[order.group]]
     id = "paketo-buildpacks/php-fpm"
@@ -107,7 +107,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/nginx"
-    version = "0.17.32"
+    version = "0.17.33"
 
   [[order.group]]
     id = "paketo-buildpacks/php-fpm"
