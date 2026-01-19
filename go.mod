@@ -1,6 +1,6 @@
 module github.com/paketo-buildpacks/php
 
-go 1.25.5
+go 1.25.6
 
 require (
 	github.com/onsi/gomega v1.34.2
