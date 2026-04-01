@@ -26,7 +26,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/php-dist"
-    version = "2.8.2"
+    version = "2.8.3"
 
   [[order.group]]
     id = "paketo-buildpacks/composer"
@@ -93,7 +93,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/php-dist"
-    version = "2.8.2"
+    version = "2.8.3"
 
   [[order.group]]
     id = "paketo-buildpacks/composer"
@@ -107,7 +107,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/nginx"
-    version = "1.0.19"
+    version = "1.0.20"
 
   [[order.group]]
     id = "paketo-buildpacks/php-fpm"
@@ -150,7 +150,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/php-dist"
-    version = "2.8.2"
+    version = "2.8.3"
 
   [[order.group]]
     id = "paketo-buildpacks/composer"
