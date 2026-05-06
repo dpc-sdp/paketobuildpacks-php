@@ -26,7 +26,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/php-dist"
-    version = "2.10.2"
+    version = "2.10.3"
 
   [[order.group]]
     id = "paketo-buildpacks/composer"
@@ -44,11 +44,11 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/php-fpm"
-    version = "0.2.48"
+    version = "0.2.49"
 
   [[order.group]]
     id = "paketo-buildpacks/php-httpd"
-    version = "0.3.45"
+    version = "0.3.46"
 
   [[order.group]]
     id = "paketo-buildpacks/php-memcached-session-handler"
@@ -93,7 +93,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/php-dist"
-    version = "2.10.2"
+    version = "2.10.3"
 
   [[order.group]]
     id = "paketo-buildpacks/composer"
@@ -107,11 +107,11 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/nginx"
-    version = "1.0.24"
+    version = "1.0.25"
 
   [[order.group]]
     id = "paketo-buildpacks/php-fpm"
-    version = "0.2.48"
+    version = "0.2.49"
 
   [[order.group]]
     id = "paketo-buildpacks/php-nginx"
@@ -150,7 +150,7 @@ api = "0.7"
 
   [[order.group]]
     id = "paketo-buildpacks/php-dist"
-    version = "2.10.2"
+    version = "2.10.3"
 
   [[order.group]]
     id = "paketo-buildpacks/composer"
