@@ -12,9 +12,8 @@ on:
         type: string
       ecr-push-role-arn:
         description: 'Role ARN to assume for pushing to ECR'
-        required: true
+        required: false
         type: string
-        default: ${{ secrets.ECR_PUSH_ROLE_ARN }}
       ecr-repository-path:
         description: 'ECR repository path'
         required: true
@@ -109,7 +108,7 @@ jobs:
         if: ${{ steps.parse_configs.outputs.push_to_ecr == 'true' }}
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ inputs.ecr-push-role-arn }}
+          role-to-assume: ${{ inputs.ecr-push-role-arn || secrets.ECR_PUSH_ROLE_ARN }}
           aws-region: ${{ inputs.aws-region }}
 
       - name: Login to Amazon ECR
