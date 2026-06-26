@@ -6,6 +6,10 @@ on:
       - published
   workflow_dispatch:
     inputs:
+      version:
+        description: 'Buildpack version to publish (semver, with or without leading v)'
+        required: true
+        type: string
       ecr-push-role-arn:
         description: 'Role ARN to assume for pushing to ECR'
         required: true
@@ -34,9 +38,32 @@ jobs:
       - name: Parse Event
         id: event
         run: |
-          FULL_VERSION="$(jq -r '.release.tag_name' "${GITHUB_EVENT_PATH}" | sed 's/^v//')"
+          # Resolve version source by trigger type.
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            FULL_VERSION="${{ inputs.version }}"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            FULL_VERSION="$(jq -r '.release.tag_name // empty' "${GITHUB_EVENT_PATH}")"
+          else
+            echo "Unsupported event type: ${{ github.event_name }}"
+            exit 1
+          fi
+
+          # Normalize optional leading v.
+          FULL_VERSION="${FULL_VERSION#v}"
+
+          # Strict validation: require x.y.z semver with optional pre-release/build metadata.
+          if [[ -z "${FULL_VERSION}" ]]; then
+            echo "Version is required but was empty"
+            exit 1
+          fi
+          if ! [[ "${FULL_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([\-+][0-9A-Za-z\.-]+)?$ ]]; then
+            echo "Invalid version '${FULL_VERSION}'. Expected semver like 1.2.3 (optionally with pre-release/build metadata)."
+            exit 1
+          fi
+
           MINOR_VERSION="$(echo "${FULL_VERSION}" | awk -F '.' '{print $1 "." $2 }')"
           MAJOR_VERSION="$(echo "${FULL_VERSION}" | awk -F '.' '{print $1 }')"
+
           echo "tag_full=${FULL_VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag_minor=${MINOR_VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag_major=${MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
@@ -68,7 +95,7 @@ jobs:
           buidpackTomlVersion=$(tar -xzf build/buildpack-release-artifact.tgz --to-stdout buildpack.toml | yj -tj | jq -r .buildpack.version)
           githubReleaseVersion="${{ steps.event.outputs.tag_full }}"
           if [[ "$buidpackTomlVersion" != "$githubReleaseVersion" ]]; then
-            echo "Version in buildpack.toml ($buidpackTomlVersion) and github release ($githubReleaseVersion) are not identical"
+            echo "Version in buildpack.toml ($buidpackTomlVersion) and resolved workflow version ($githubReleaseVersion) are not identical"
             exit 1
           fi
 
