@@ -3,127 +3,103 @@ name: Push Buildpackage
 on:
   release:
     types:
-    - published
+      - published
+  workflow_dispatch:
+    inputs:
+      ecr-push-role-arn:
+        description: 'Role ARN to assume for pushing to ECR'
+        required: true
+        type: string
+      aws-region:
+        description: 'AWS region to push to'
+        required: false
+        type: string
+        default: ap-southeast-4
+
 env:
   REGISTRIES_FILENAME: "registries.json"
-  GCR_REGISTRY: "gcr.io"
-  GCR_PASSWORD: ${{ secrets.GCR_PUSH_BOT_JSON_KEY }}
-  GCR_USERNAME: "_json_key"
-  DOCKERHUB_REGISTRY: docker.io
-  DOCKERHUB_USERNAME: ${{ secrets.PAKETO_BUILDPACKS_DOCKERHUB_USERNAME }}
-  DOCKERHUB_PASSWORD: ${{ secrets.PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD }}
+  AWS_REGION: "ap-southeast-4"
 
 jobs:
   push:
     name: Push
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      id-token: write
+      contents: read
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
-    - name: Checkout
-      uses: actions/checkout@v6
+      - name: Parse Event
+        id: event
+        run: |
+          FULL_VERSION="$(jq -r '.release.tag_name' "${GITHUB_EVENT_PATH}" | sed 's/^v//')"
+          MINOR_VERSION="$(echo "${FULL_VERSION}" | awk -F '.' '{print $1 "." $2 }')"
+          MAJOR_VERSION="$(echo "${FULL_VERSION}" | awk -F '.' '{print $1 }')"
+          echo "tag_full=${FULL_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag_minor=${MINOR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag_major=${MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
 
-    - name: Parse Event
-      id: event
-      run: |
-        FULL_VERSION="$(jq -r '.release.tag_name' "${GITHUB_EVENT_PATH}" | sed s/^v//)"
-        MINOR_VERSION="$(echo "${FULL_VERSION}" | awk -F '.' '{print $1 "." $2 }')"
-        MAJOR_VERSION="$(echo "${FULL_VERSION}" | awk -F '.' '{print $1 }')"
-        echo "tag_full=${FULL_VERSION}" >> "$GITHUB_OUTPUT"
-        echo "tag_minor=${MINOR_VERSION}" >> "$GITHUB_OUTPUT"
-        echo "tag_major=${MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
-        echo "download_tgz_file_url=$(jq -r '.release.assets[] | select(.name | endswith(".tgz")) | .url' "${GITHUB_EVENT_PATH}")" >> "$GITHUB_OUTPUT"
+      - name: Package buildpack
+        run: |
+          ./scripts/package.sh --version "${{ steps.event.outputs.tag_full }}" --output build/buildpackage.cnb
 
-    - name: Download .tgz buildpack release artifact
-      uses: paketo-buildpacks/github-config/actions/release/download-asset@main
-      with:
-        url: ${{ steps.event.outputs.download_tgz_file_url }}
-        output: "/github/workspace/buildpack-release-artifact.tgz"
-        token: ${{ secrets.PAKETO_BOT_GITHUB_TOKEN }}
+      - name: Parse Configs
+        id: parse_configs
+        run: |
+          registries_filename="${{ env.REGISTRIES_FILENAME }}"
 
-    - name: Parse Configs
-      id: parse_configs
-      run: |
-        registries_filename="${{ env.REGISTRIES_FILENAME }}"
+          push_to_ecr=true
 
-        push_to_dockerhub=true
-        push_to_gcr=false
-
-        if [[ -f $registries_filename ]]; then
-          if jq 'has("dockerhub")' $registries_filename > /dev/null; then
-            push_to_dockerhub=$(jq '.dockerhub' $registries_filename)
+          if [[ -f $registries_filename ]]; then
+            if jq 'has("ecr")' $registries_filename > /dev/null; then
+              push_to_ecr=$(jq '.ecr' $registries_filename)
+            fi
           fi
-          if jq 'has("GCR")' $registries_filename > /dev/null; then
-            push_to_gcr=$(jq '.GCR' $registries_filename)
+
+          echo "push_to_ecr=${push_to_ecr}" >> "$GITHUB_OUTPUT"
+
+      - name: Install yj and crane
+        uses: buildpacks/github-actions/setup-tools@v5.12.1
+
+      - name: Validate version
+        run: |
+          buidpackTomlVersion=$(tar -xzf build/buildpack-release-artifact.tgz --to-stdout buildpack.toml | yj -tj | jq -r .buildpack.version)
+          githubReleaseVersion="${{ steps.event.outputs.tag_full }}"
+          if [[ "$buidpackTomlVersion" != "$githubReleaseVersion" ]]; then
+            echo "Version in buildpack.toml ($buidpackTomlVersion) and github release ($githubReleaseVersion) are not identical"
+            exit 1
           fi
-        fi
 
-        echo "push_to_dockerhub=${push_to_dockerhub}" >> "$GITHUB_OUTPUT"
-        echo "push_to_gcr=${push_to_gcr}" >> "$GITHUB_OUTPUT"
+      - name: Configure AWS credentials
+        if: ${{ steps.parse_configs.outputs.push_to_ecr == 'true' }}
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ inputs.ecr-push-role-arn }}
+          aws-region: ${{ inputs.aws-region }}
 
-    - name: Install yj and crane
-      uses: buildpacks/github-actions/setup-tools@v5.12.1
+      - name: Login to Amazon ECR
+        if: ${{ steps.parse_configs.outputs.push_to_ecr == 'true' }}
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Validate version
-      run: |
-        buidpackTomlVersion=$(tar -xzf buildpack-release-artifact.tgz --to-stdout buildpack.toml | yj -tj | jq -r .buildpack.version)
-        githubReleaseVersion="${{ steps.event.outputs.tag_full }}"
-        if [[ "$buidpackTomlVersion" != "$githubReleaseVersion" ]]; then
-          echo "Version in buildpack.toml ($buidpackTomlVersion) and github release ($githubReleaseVersion) are not identical"
-          exit 1
-        fi
+      - name: Push to ECR
+        if: ${{ steps.parse_configs.outputs.push_to_ecr == 'true' }}
+        id: push
+        run: |
+          ./scripts/publish.sh \
+            --archive-path build/buildpack-release-artifact.tgz \
+            --image-ref "${{ steps.login-ecr.outputs.registry }}/${{ github.repository }}:${{ steps.event.outputs.tag_full }}"
 
-    - name: Docker login docker.io
-      uses: docker/login-action@v4
-      with:
-        username: ${{ env.DOCKERHUB_USERNAME }}
-        password: ${{ env.DOCKERHUB_PASSWORD }}
-        registry: ${{ env.DOCKERHUB_REGISTRY }}
+          pushed_image_index_digest=$(crane digest "${{ steps.login-ecr.outputs.registry }}/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" | xargs)
 
-    - name: Docker login gcr.io
-      uses: docker/login-action@v4
-      if: ${{ steps.parse_configs.outputs.push_to_gcr == 'true' }}
-      with:
-        username: ${{ env.GCR_USERNAME }}
-        password: ${{ env.GCR_PASSWORD }}
-        registry: ${{ env.GCR_REGISTRY }}
+          crane copy "${{ steps.login-ecr.outputs.registry }}/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/${{ github.repository }}:${{ steps.event.outputs.tag_minor }}"
+          crane copy "${{ steps.login-ecr.outputs.registry }}/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/${{ github.repository }}:${{ steps.event.outputs.tag_major }}"
+          crane copy "${{ steps.login-ecr.outputs.registry }}/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/${{ github.repository }}:latest"
 
-    - name: Push to GCR
-      if: ${{  steps.parse_configs.outputs.push_to_gcr == 'true' }}
-      run: |
-        ./scripts/publish.sh \
-          --archive-path buildpack-release-artifact.tgz \
-          --image-ref "gcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_full }}"
-
-        crane copy "gcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" "gcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_minor }}"
-        crane copy "gcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" "gcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_major }}"
-        crane copy "gcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" "gcr.io/${{ github.repository }}:latest"
-
-    - name: Push to DockerHub
-      if: ${{  steps.parse_configs.outputs.push_to_dockerhub == 'true' }}
-      id: push
-      run: |
-        IMAGE="${GITHUB_REPOSITORY_OWNER/-/}/${GITHUB_REPOSITORY#${GITHUB_REPOSITORY_OWNER}/}" # translates 'paketo-buildpacks/bundle-install' to 'paketobuildpacks/bundle-install'
-
-        ./scripts/publish.sh \
-          --archive-path buildpack-release-artifact.tgz \
-          --image-ref "${DOCKERHUB_REGISTRY}/${IMAGE}:${{ steps.event.outputs.tag_full }}"
-
-        pushed_image_index_digest=$(crane digest "${DOCKERHUB_REGISTRY}/${IMAGE}:${{ steps.event.outputs.tag_full }}" | xargs)
-
-        crane copy "${DOCKERHUB_REGISTRY}/${IMAGE}:${{ steps.event.outputs.tag_full }}" "${DOCKERHUB_REGISTRY}/${IMAGE}:${{ steps.event.outputs.tag_minor }}"
-        crane copy "${DOCKERHUB_REGISTRY}/${IMAGE}:${{ steps.event.outputs.tag_full }}" "${DOCKERHUB_REGISTRY}/${IMAGE}:${{ steps.event.outputs.tag_major }}"
-        crane copy "${DOCKERHUB_REGISTRY}/${IMAGE}:${{ steps.event.outputs.tag_full }}" "${DOCKERHUB_REGISTRY}/${IMAGE}:latest"
-
-        echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
-        echo "digest=$pushed_image_index_digest" >> "$GITHUB_OUTPUT"
-
-    - name: Register with CNB Registry
-      uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:main
-      with:
-        id: ${{ github.repository }}
-        version: ${{ steps.event.outputs.tag_full }}
-        address: index.docker.io/${{ steps.push.outputs.image }}@${{ steps.push.outputs.digest }}
-        token: ${{ secrets.PAKETO_BOT_GITHUB_TOKEN }}
+          echo "image=${{ steps.login-ecr.outputs.registry }}/${{ github.repository }}" >> "$GITHUB_OUTPUT"
+          echo "digest=$pushed_image_index_digest" >> "$GITHUB_OUTPUT"
 
   failure:
     name: Alert on Failure
@@ -131,15 +107,15 @@ jobs:
     needs: [push]
     if: ${{ always() && needs.push.result == 'failure' }}
     steps:
-    - name: File Failure Alert Issue
-      uses: paketo-buildpacks/github-config/actions/issue/file@main
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        repo: ${{ github.repository }}
-        label: "failure:push"
-        comment_if_exists: true
-        issue_title: "Failure: Push Buildpackage workflow"
-        issue_body: |
-          Push Buildpackage workflow [failed](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}).
-        comment_body: |
-           Another failure occurred: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
+      - name: File Failure Alert Issue
+        uses: paketo-buildpacks/github-config/actions/issue/file@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repo: ${{ github.repository }}
+          label: "failure:push"
+          comment_if_exists: true
+          issue_title: "Failure: Push Buildpackage workflow"
+          issue_body: |
+            Push Buildpackage workflow [failed](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}).
+          comment_body: |
+            Another failure occurred: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
