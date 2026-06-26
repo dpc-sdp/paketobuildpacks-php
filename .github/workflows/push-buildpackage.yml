@@ -1,6 +1,7 @@
 name: Push Buildpackage
 
 on:
+  push:
   release:
     types:
       - published
