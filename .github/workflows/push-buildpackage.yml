@@ -10,6 +10,11 @@ on:
         description: 'Buildpack version to publish (semver, with or without leading v)'
         required: true
         type: string
+      registry:
+        description: 'Registry to push to'
+        required: false
+        type: string
+        default: 'ghcr.io'
       ecr-push-role-arn:
         description: 'Role ARN to assume for pushing to ECR'
         required: false
@@ -34,6 +39,58 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Parse Configs - ECR
+        if: ${{ inputs.registry == 'ecr' }}
+        id: parse_configs_ecr
+        run: |
+          registries_filename="${{ env.REGISTRIES_FILENAME }}"
+
+          push_to_ecr=true
+
+          if [[ -f $registries_filename ]]; then
+            if jq 'has("ecr")' $registries_filename > /dev/null; then
+              push_to_ecr=$(jq '.ecr' $registries_filename)
+            fi
+          fi
+
+          echo "push_to_ecr=${push_to_ecr}" >> "$GITHUB_OUTPUT"
+
+      - name: Parse Configs - ghcr.io
+        if: ${{ inputs.registry == 'ghcr.io' }}
+        id: parse_configs_ghcr
+        run: |
+          registries_filename="${{ env.REGISTRIES_FILENAME }}"
+
+          push_to_ghcr=true
+
+          if [[ -f $registries_filename ]]; then
+            if jq 'has("ghcr")' $registries_filename > /dev/null; then
+              push_to_ghcr=$(jq '.ghcr' $registries_filename)
+            fi
+          fi
+
+          echo "push_to_ghcr=${push_to_ghcr}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
+        if: ${{ steps.parse_configs_ecr.outputs.push_to_ecr == 'true' }}
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ inputs.ecr-push-role-arn || secrets.ECR_PUSH_ROLE_ARN }}
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Login to Amazon ECR
+        if: ${{ steps.parse_configs_ecr.outputs.push_to_ecr == 'true' }}
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Configure ghcr.io credentials
+        if: ${{ steps.parse_configs_ghcr.outputs.push_to_ghcr == 'true' }}
+        uses: docker/login-action@v3
+        with:
+          registry: 'ghcr.io'
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
 
       - name: Parse Event
         id: event
@@ -72,20 +129,6 @@ jobs:
         run: |
           ./scripts/package.sh --version "${{ steps.event.outputs.tag_full }}" --output build/buildpackage.cnb
 
-      - name: Parse Configs
-        id: parse_configs
-        run: |
-          registries_filename="${{ env.REGISTRIES_FILENAME }}"
-
-          push_to_ecr=true
-
-          if [[ -f $registries_filename ]]; then
-            if jq 'has("ecr")' $registries_filename > /dev/null; then
-              push_to_ecr=$(jq '.ecr' $registries_filename)
-            fi
-          fi
-
-          echo "push_to_ecr=${push_to_ecr}" >> "$GITHUB_OUTPUT"
 
       - name: Install yj and crane
         uses: buildpacks/github-actions/setup-tools@v5.12.1
@@ -99,21 +142,10 @@ jobs:
             exit 1
           fi
 
-      - name: Configure AWS credentials
-        if: ${{ steps.parse_configs.outputs.push_to_ecr == 'true' }}
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          role-to-assume: ${{ inputs.ecr-push-role-arn || secrets.ECR_PUSH_ROLE_ARN }}
-          aws-region: ${{ inputs.aws-region }}
-
-      - name: Login to Amazon ECR
-        if: ${{ steps.parse_configs.outputs.push_to_ecr == 'true' }}
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push to ECR
-        if: ${{ steps.parse_configs.outputs.push_to_ecr == 'true' }}
-        id: push
+        if: ${{ steps.parse_configs_ecr.outputs.push_to_ecr == 'true' }}
+        id: push_ecr
         run: |
           ./scripts/publish.sh \
             --archive-path build/buildpack-release-artifact.tgz \
@@ -126,6 +158,23 @@ jobs:
           crane copy "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:latest"
 
           echo "image=${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}" >> "$GITHUB_OUTPUT"
+          echo "digest=$pushed_image_index_digest" >> "$GITHUB_OUTPUT"
+
+      - name: Push to ghcr.io
+        if: ${{ steps.parse_configs_ghcr.outputs.push_to_ghcr == 'true' }}
+        id: push_ghcr
+        run: |
+          ./scripts/publish.sh \
+            --archive-path build/buildpack-release-artifact.tgz \
+            --image-ref "ghcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_full }}"
+
+          pushed_image_index_digest=$(crane digest "ghcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" | xargs)
+
+          crane copy "ghcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" "ghcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_minor }}"
+          crane copy "ghcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" "ghcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_major }}"
+          crane copy "ghcr.io/${{ github.repository }}:${{ steps.event.outputs.tag_full }}" "ghcr.io/${{ github.repository }}:latest"
+
+          echo "image=ghcr.io/${{ github.repository }}" >> "$GITHUB_OUTPUT"
           echo "digest=$pushed_image_index_digest" >> "$GITHUB_OUTPUT"
 
   failure:
