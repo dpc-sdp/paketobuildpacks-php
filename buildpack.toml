@@ -160,7 +160,6 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/composer-install"
     optional = true
-    version = "0.3.28"
 
   [[order.group]]
     id = "paketo-buildpacks/php-builtin-server"

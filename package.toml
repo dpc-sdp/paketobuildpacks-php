@@ -12,7 +12,7 @@
   uri = "urn:cnb:registry:paketo-buildpacks/composer@0.8.7"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/composer-install@0.3.28"
+  uri = "734101502693.dkr.ecr.ap-southeast-4.amazonaws.com/marina-platform/buildpacks/paketobuildpacks-composer-install:0.0.1-rc1"
 
 [[dependencies]]
   uri = "urn:cnb:registry:paketo-buildpacks/php-dist@2.10.11"
