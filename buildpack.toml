@@ -36,7 +36,7 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/composer-install"
     optional = true
-    version = "0.3.28"
+    version = "0.0.1-rc1"
 
   [[order.group]]
     id = "paketo-buildpacks/httpd"
@@ -103,7 +103,7 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/composer-install"
     optional = true
-    version = "0.3.28"
+    version = "0.0.1-rc1"
 
   [[order.group]]
     id = "paketo-buildpacks/nginx"
@@ -160,6 +160,7 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/composer-install"
     optional = true
+    version = "0.0.1-rc1"
 
   [[order.group]]
     id = "paketo-buildpacks/php-builtin-server"
