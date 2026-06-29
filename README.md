@@ -10,9 +10,9 @@ enable the building of a PHP-based application. These buildpacks include:
 - [PHP FPM CNB](https://github.com/paketo-buildpacks/php-fpm)
 - [PHP Start CNB](https://github.com/paketo-buildpacks/php-start)
 - [PHP Redis Session Handler CNB](https://github.com/paketo-buildpacks/php-redis-session-handler)
-- [PHP Memcached Session Handler CNB](https://github.com/paketo-buildpacks/php-memcached-session-handler)
+- Removed - [PHP Memcached Session Handler CNB](https://github.com/paketo-buildpacks/php-memcached-session-handler)
 - [Composer CNB](https://github.com/paketo-buildpacks/composer)
-- [Composer Install CNB](https://github.com/paketo-buildpacks/composer-install)
+- Forked - [Composer Install CNB](https://github.com/dpc-sdp/paketobuildpacks-composer-install)
 - [Apache HTTPD CNB](https://github.com/paketo-buildpacks/httpd)
 - [NGINX CNB](https://github.com/paketo-buildpacks/nginx)
 

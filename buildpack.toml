@@ -34,7 +34,7 @@ api = "0.7"
     version = "0.8.7"
 
   [[order.group]]
-    id = "paketo-buildpacks/composer-install"
+    id = "dpc-sdp/paketobuildpacks-composer-install"
     optional = true
     version = "0.0.1-rc1"
 
@@ -96,7 +96,7 @@ api = "0.7"
     version = "0.8.7"
 
   [[order.group]]
-    id = "paketo-buildpacks/composer-install"
+    id = "dpc-sdp/paketobuildpacks-composer-install"
     optional = true
     version = "0.0.1-rc1"
 
@@ -148,7 +148,7 @@ api = "0.7"
     version = "0.8.7"
 
   [[order.group]]
-    id = "paketo-buildpacks/composer-install"
+    id = "dpc-sdp/paketobuildpacks-composer-install"
     optional = true
     version = "0.0.1-rc1"
 
