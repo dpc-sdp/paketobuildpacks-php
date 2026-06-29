@@ -1,9 +1,9 @@
 api = "0.7"
 
 [buildpack]
-  homepage = "https://github.com/paketo-buildpacks/php"
-  id = "paketo-buildpacks/php"
-  name = "Paketo Buildpack for PHP"
+  homepage = "https://github.com/dpc-sdp/paketobuildpacks-php"
+  id = "dpc-sdp/paketobuildpacks-php"
+  name = "Forked Paketo Buildpack for PHP"
 
   [[buildpack.licenses]]
     type = "Apache-2.0"
