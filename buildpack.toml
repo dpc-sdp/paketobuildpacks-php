@@ -51,11 +51,6 @@ api = "0.7"
     version = "0.3.53"
 
   [[order.group]]
-    id = "paketo-buildpacks/php-memcached-session-handler"
-    optional = true
-    version = "0.2.32"
-
-  [[order.group]]
     id = "paketo-buildpacks/php-redis-session-handler"
     optional = true
     version = "0.2.43"
@@ -118,11 +113,6 @@ api = "0.7"
     version = "0.3.32"
 
   [[order.group]]
-    id = "paketo-buildpacks/php-memcached-session-handler"
-    optional = true
-    version = "0.2.32"
-
-  [[order.group]]
     id = "paketo-buildpacks/php-redis-session-handler"
     optional = true
     version = "0.2.43"
@@ -165,11 +155,6 @@ api = "0.7"
   [[order.group]]
     id = "paketo-buildpacks/php-builtin-server"
     version = "0.4.41"
-
-  [[order.group]]
-    id = "paketo-buildpacks/php-memcached-session-handler"
-    optional = true
-    version = "0.2.32"
 
   [[order.group]]
     id = "paketo-buildpacks/php-redis-session-handler"
