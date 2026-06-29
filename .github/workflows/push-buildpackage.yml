@@ -14,11 +14,6 @@ on:
         description: 'Role ARN to assume for pushing to ECR'
         required: false
         type: string
-      ecr-repository-path:
-        description: 'ECR repository path'
-        required: true
-        type: string
-        default: marina-platform/buildpacks/php
       aws-region:
         description: 'AWS region to push to'
         required: false
@@ -122,15 +117,15 @@ jobs:
         run: |
           ./scripts/publish.sh \
             --archive-path build/buildpack-release-artifact.tgz \
-            --image-ref "${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository-path }}:${{ steps.event.outputs.tag_full }}"
+            --image-ref "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:${{ steps.event.outputs.tag_full }}"
 
-          pushed_image_index_digest=$(crane digest "${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository-path }}:${{ steps.event.outputs.tag_full }}" | xargs)
+          pushed_image_index_digest=$(crane digest "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:${{ steps.event.outputs.tag_full }}" | xargs)
 
-          crane copy "${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository-path }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository-path }}:${{ steps.event.outputs.tag_minor }}"
-          crane copy "${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository-path }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository-path }}:${{ steps.event.outputs.tag_major }}"
-          crane copy "${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository-path }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository-path }}:latest"
+          crane copy "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:${{ steps.event.outputs.tag_minor }}"
+          crane copy "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:${{ steps.event.outputs.tag_major }}"
+          crane copy "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:${{ steps.event.outputs.tag_full }}" "${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}:latest"
 
-          echo "image=${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository-path }}" >> "$GITHUB_OUTPUT"
+          echo "image=${{ steps.login-ecr.outputs.registry }}/marina-platform/buildpacks/${{ github.event.repository.name }}" >> "$GITHUB_OUTPUT"
           echo "digest=$pushed_image_index_digest" >> "$GITHUB_OUTPUT"
 
   failure:
