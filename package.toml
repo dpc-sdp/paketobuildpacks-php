@@ -3,40 +3,40 @@
   uri = "build/buildpack.tgz"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/httpd@1.1.1"
+  uri = "urn:cnb:registry:paketo-buildpacks/httpd@1.1.2"
 
 [[dependencies]]
   uri = "urn:cnb:registry:paketo-buildpacks/nginx@1.2.0"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/composer@0.8.17"
+  uri = "urn:cnb:registry:paketo-buildpacks/composer@0.8.18"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/composer-install@0.3.33"
+  uri = "urn:cnb:registry:paketo-buildpacks/composer-install@0.3.34"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/php-dist@2.10.25"
+  uri = "urn:cnb:registry:paketo-buildpacks/php-dist@2.10.26"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/php-httpd@0.3.63"
+  uri = "urn:cnb:registry:paketo-buildpacks/php-httpd@0.3.64"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/php-nginx@0.3.42"
+  uri = "urn:cnb:registry:paketo-buildpacks/php-nginx@0.3.43"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/php-builtin-server@0.4.51"
+  uri = "urn:cnb:registry:paketo-buildpacks/php-builtin-server@0.4.52"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/php-fpm@0.2.67"
+  uri = "urn:cnb:registry:paketo-buildpacks/php-fpm@0.2.68"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/php-start@0.5.11"
+  uri = "urn:cnb:registry:paketo-buildpacks/php-start@0.5.12"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/php-redis-session-handler@0.2.53"
+  uri = "urn:cnb:registry:paketo-buildpacks/php-redis-session-handler@0.2.54"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/php-memcached-session-handler@0.2.40"
+  uri = "urn:cnb:registry:paketo-buildpacks/php-memcached-session-handler@0.2.41"
 
 [[dependencies]]
   uri = "urn:cnb:registry:paketo-buildpacks/procfile@5.13.7"
@@ -51,4 +51,4 @@
   uri = "urn:cnb:registry:paketo-buildpacks/ca-certificates@3.12.7"
 
 [[dependencies]]
-  uri = "urn:cnb:registry:paketo-buildpacks/watchexec@3.9.8"
+  uri = "urn:cnb:registry:paketo-buildpacks/watchexec@3.10.0"
